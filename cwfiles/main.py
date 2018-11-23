@@ -35,13 +35,18 @@ def alice(filename):
                 if wire.source == input_wire_source:
                     wire.value = int(value)
 
+        output_values = []
+
         for gate in gates:
             inputs = util.find_input_values(gate.inputs,wires)
             # find wire whose source is gate output_wire
             wire = util.find_wire(gate.output,wires)
             wire.value = gate.truth_table[inputs]
+            if wire.sink in circuit.output:
+                output_values.append(wire.value) 
 
-        util.print_output(perm, wire.value, circuit.alice, circuit.bob, circuit.output)
+
+        util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
 
     # perm = '10101'
     # for input_wire_source,value in zip(circuit.alice + circuit.bob, perm):

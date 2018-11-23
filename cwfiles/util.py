@@ -153,6 +153,10 @@ def find_wire(source, wires):
         if wire.source == source:
             return wire
 
-def print_output(perm, value, alice, bob, output):
+def print_output(perm, output_values, alice, bob, output):
     n = len(alice)
-    print("Alice" + str(alice) + " = " + " ".join(list(perm[:n])) + " Bob" + str(bob) + " = " + " ".join(list(perm[n:])) + "  Outputs" + str(output) + " = " + str(value))
+    a = "Alice" + str(alice) + " = " + " ".join(list(perm[:n]))
+    b = " Bob" + str(bob) + " = " + " ".join(list(perm[n:]))
+    print(output_values)
+    o = "  Outputs" + str(output) + " = " + " ".join(map(str, output))
+    print(a + b + o)
