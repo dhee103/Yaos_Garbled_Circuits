@@ -28,43 +28,41 @@ def alice(filename):
     wires.sort(key=lambda x: x.source)
 
     print(circuit.name)
-    # for perm in perms:
-    #     for i,value in enumerate(perm):
-    #         # forall wires with source == i+1, set value to value
-    #         for wire in wires:
-    #             if wire.source == i+1:
-    #                 wire.value = int(value)
+    for perm in perms:
+        for input_wire_source,value in zip(circuit.alice + circuit.bob, perm):
+            # set all input wires to value
+            for wire in wires:
+                if wire.source == input_wire_source:
+                    wire.value = int(value)
+
+        for gate in gates:
+            inputs = util.find_input_values(gate.inputs,wires)
+            # find wire whose source is gate output_wire
+            wire = util.find_wire(gate.output,wires)
+            wire.value = gate.truth_table[inputs]
+
+        util.print_output(perm, wire.value, circuit.alice, circuit.bob, circuit.output)
+
+    # perm = '10101'
+    # for input_wire_source,value in zip(circuit.alice + circuit.bob, perm):
+    #     # set all input wires to value
+    #     for wire in wires:
+    #         if wire.source == input_wire_source:
+    #             wire.value = int(value)
     #
-    #     print(wires)
-    #     print(gates)
+    # for wire in wires:
+    #     print(wire)
+    # for gate in gates:
+    #     print(gate)
     #
-    #     for gate in gates:
-    #         inputs = util.find_input_values(gate.inputs,wires)
-    #         # find wire whose source is gate output_wire
-    #         wire = util.find_wire(gate.output,wires)
-    #         wire.value = gate.truth_table[inputs]
-    #
-    #     util.print_output(perm, wire.value, circuit.alice, circuit.bob, circuit.output)
+    # for gate in gates:
+    #     inputs = util.find_input_values(gate.inputs,wires)
+    #     # find wire whose source is gate output_wire
+    #     print(gate.output)
+    #     wire = util.find_wire(gate.output,wires)
+    #     wire.value = gate.truth_table[inputs]
 
-# for perm in perms:
-    perm = '1011'
-    for i,value in enumerate(perm):
-        # forall wires with source == i+1, set value to value
-        for wire in wires:
-            if wire.source == i+1:
-                wire.value = int(value)
-
-    print(wires)
-    print(gates)
-
-    for gate in gates:
-        inputs = util.find_input_values(gate.inputs,wires)
-        # find wire whose source is gate output_wire
-        print(gate.output)
-        wire = util.find_wire(gate.output,wires)
-        wire.value = gate.truth_table[inputs]
-
-    util.print_output(perm, wire.value, circuit.alice, circuit.bob, circuit.output)
+    # util.print_output(perm, wire.value, circuit.alice, circuit.bob, circuit.output)
 
 
 # Bob is the circuit evaluator (server) ____________________________________
