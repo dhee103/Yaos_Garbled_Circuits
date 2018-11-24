@@ -154,6 +154,12 @@ def find_wire(source, wires):
             return wire
     return None
 
+def partition_to_tuple(output):
+    output_tuple = output.decode().rsplit('=',1)
+    output_tuple[0] = str.encode(output_tuple[0] + '=') # replace the equals that was removed
+    output_tuple[1] = 1 if 'x00' in output_tuple[1] else 0
+    return tuple(output_tuple)
+
 def print_output(perm, output_values, alice, bob, output):
     n = len(alice)
     a = "  Alice" + str(alice) + " = " + " ".join(list(perm[:n]))

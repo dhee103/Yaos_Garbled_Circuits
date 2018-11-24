@@ -35,8 +35,8 @@ def alice(filename):
             # set all input wires to value
             for wire in wires:
                 if wire.source == input_wire_source:
-                    key = wire.key_1 if value == 1 else wire.key_0
-                    print(value)
+                    key = wire.key_1 if value == '1' else wire.key_0
+                    # print(value)
                     ext_value = int(value) ^ wire.p_bit
                     wire.value = ( key, ext_value )
 
@@ -59,7 +59,7 @@ def alice(filename):
 
             output_wire = util.find_wire(gate.output, wires)
 
-            output_wire.value = output
+            output_wire.value = util.partition_to_tuple(output)
 
         for output in circuit.output:
             wire = util.find_wire(output,wires)

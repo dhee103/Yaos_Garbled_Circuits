@@ -122,7 +122,7 @@ class Circuit:
                 encryptions[perm] = two_pass_encryption
                 garbled_table[gate_id] = encryptions
 
-        print(garbled_table)
+        # print(garbled_table)
         return garbled_table
 
 
