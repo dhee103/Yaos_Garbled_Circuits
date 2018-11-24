@@ -116,6 +116,7 @@ class Circuit:
 
                 f = Fernet(encryption_key_0)
                 one_pass_encryption = f.encrypt(output_key + bytes(output_val))
+                check = f.decrypt(one_pass_encryption)
                 f = Fernet(encryption_key_1)
                 two_pass_encryption = f.encrypt(one_pass_encryption)
                 encryptions = garbled_table.get(gate_id, {})
