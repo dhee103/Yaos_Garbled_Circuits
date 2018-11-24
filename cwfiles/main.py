@@ -48,7 +48,7 @@ def alice(filename):
             if wire.source in circuit.output:
                 output_values.append(wire.value)
 
-        util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
+        # util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
 
     # perm = '10101'
     # for input_wire_source,value in zip(circuit.alice + circuit.bob, perm):
