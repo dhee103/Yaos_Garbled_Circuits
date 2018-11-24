@@ -27,7 +27,8 @@ def alice(filename):
 
     wires.sort(key=lambda x: x.source)
 
-    print(circuit.name)
+    print()
+    print("======= " + circuit.name + " =======")
     for perm in perms:
         for input_wire_source,value in zip(circuit.alice + circuit.bob, perm):
             # set all input wires to value
@@ -39,9 +40,11 @@ def alice(filename):
 
         for gate in gates:
             inputs = util.find_input_values(gate.inputs,wires)
-            # find wire whose source is gate output_wire
             wire = util.find_wire(gate.output,wires)
             wire.value = gate.truth_table[inputs]
+
+        for output in circuit.output:
+            wire = util.find_wire(output,wires)
             if wire.source in circuit.output:
                 output_values.append(wire.value)
 
