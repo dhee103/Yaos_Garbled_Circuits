@@ -152,6 +152,7 @@ def find_wire(source, wires):
     for wire in wires:
         if wire.source == source:
             return wire
+    return None
 
 def print_output(perm, output_values, alice, bob, output):
     n = len(alice)

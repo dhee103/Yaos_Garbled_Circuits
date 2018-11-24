@@ -22,6 +22,7 @@ def alice(filename):
     circuit = Circuit(json_circuit)
     gates = circuit.gates
     wires = circuit.wires
+    garbled_truth_table = circuit.garbled_truth_table
 
     perms = util.generate_perms(circuit.inputs)
 
@@ -34,42 +35,43 @@ def alice(filename):
             # set all input wires to value
             for wire in wires:
                 if wire.source == input_wire_source:
-                    wire.value = int(value)
+                    key = wire.key_1 if value == 1 else wire.key_0
+                    print(value)
+                    ext_value = int(value) ^ wire.p_bit
+                    wire.value = ( key, ext_value )
 
         output_values = []
 
         for gate in gates:
             inputs = util.find_input_values(gate.inputs,wires)
-            wire = util.find_wire(gate.output,wires)
-            wire.value = gate.truth_table[inputs]
+            ext_values = ''
+            decrypt_keys = []
+            for input in gate.inputs:
+                wire = util.find_wire( input ,wires)
+                decrypt_keys.append(wire.value[0])
+                ext_values += str(wire.value[1])
+
+            double_enc_key = garbled_truth_table[gate.output][ext_values]
+            f = Fernet(decrypt_keys[1])
+            single_enc_key = f.decrypt(double_enc_key)
+            f = Fernet(decrypt_keys[0])
+            output = f.decrypt(single_enc_key)
+
+            output_wire = util.find_wire(gate.output, wires)
+
+            output_wire.value = output
 
         for output in circuit.output:
             wire = util.find_wire(output,wires)
             if wire.source in circuit.output:
                 output_values.append(wire.value)
 
-        # util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
+        util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
 
-    # perm = '10101'
-    # for input_wire_source,value in zip(circuit.alice + circuit.bob, perm):
-    #     # set all input wires to value
-    #     for wire in wires:
-    #         if wire.source == input_wire_source:
-    #             wire.value = int(value)
-    #
-    # for wire in wires:
-    #     print(wire)
-    # for gate in gates:
-    #     print(gate)
-    #
-    # for gate in gates:
-    #     inputs = util.find_input_values(gate.inputs,wires)
-    #     # find wire whose source is gate output_wire
-    #     print(gate.output)
-    #     wire = util.find_wire(gate.output,wires)
-    #     wire.value = gate.truth_table[inputs]
+# bob's actions
+# bob knows: his inputs,
+# decrypt
 
-    # util.print_output(perm, wire.value, circuit.alice, circuit.bob, circuit.output)
 
 
 # Bob is the circuit evaluator (server) ____________________________________

@@ -8,19 +8,19 @@ from cryptography.fernet import Fernet
 import util
 
 class Wire:
-    def __init__(self, source, sink):
+    def __init__(self, source, sinks):
         self.source = source
-        self.sink = sink
+        self.sinks = sinks
         self.value = -1
         self.key_0 = Fernet.generate_key()
         self.key_1 = Fernet.generate_key()
         self.p_bit = random.randint(0,1)
 
     def __str__(self):
-        return "source: " + str(self.source) + " sink: " + str(self.sink) + " value: " + str(self.value)
+        return "source: " + str(self.source) + " sinks: " + str(self.sinks) + " value: " + str(self.value)
 
     def __repr__(self):
-        return "source: " + str(self.source) + " sink: " + str(self.sink) + " value: " + str(self.value)
+        return "source: " + str(self.source) + " sinks: " + str(self.sinks) + " value: " + str(self.value)
 
     def __eq__(self, other):
         """Overrides the default implementation"""
@@ -74,8 +74,13 @@ class Circuit:
 
         for gate in json_circuit['gates']:
             gates.append(Gate(gate['in'], gate['id'], gate['type']))
-            for wire in gate['in']:
-                wires.append(Wire(wire, gate['id']))
+            for input in gate['in']:
+                # find wire with source & add gate['id'] to sinks
+                wire = util.find_wire(input, wires)
+                if wire is not None:
+                    wire.sinks.append(gate['id'])
+                else:
+                    wires.append(Wire(input, [gate['id']]))
 
         for wire in json_circuit['out']:
             wires.append(Wire(wire, None))
@@ -92,6 +97,7 @@ class Circuit:
             gate_id = gate.output
             num_gate_inputs = 1 if gate.type == 'NOT' else 2
             perms = util.generate_perms(num_gate_inputs)
+
             for perm in perms:
                 wire_0 = util.find_wire(gate.inputs[0], wires)
                 useful_value_0 = wire_0.p_bit ^ int(perm[0])
@@ -109,16 +115,15 @@ class Circuit:
                 encryption_key_1 = wire_1.key_1 if bool(useful_value_1) else wire_1.key_0
 
                 f = Fernet(encryption_key_0)
-                print(type(output_key))
                 one_pass_encryption = f.encrypt(output_key + bytes(output_val))
                 f = Fernet(encryption_key_1)
                 two_pass_encryption = f.encrypt(one_pass_encryption)
                 encryptions = garbled_table.get(gate_id, {})
                 encryptions[perm] = two_pass_encryption
                 garbled_table[gate_id] = encryptions
-                # garbled_table[gate_id][perm] = two_pass_encryption
 
         print(garbled_table)
+        return garbled_table
 
 
 
