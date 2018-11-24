@@ -157,6 +157,5 @@ def print_output(perm, output_values, alice, bob, output):
     n = len(alice)
     a = "Alice" + str(alice) + " = " + " ".join(list(perm[:n]))
     b = " Bob" + str(bob) + " = " + " ".join(list(perm[n:]))
-    print(output_values)
-    o = "  Outputs" + str(output) + " = " + " ".join(map(str, output))
+    o = "  Outputs" + str(output) + " = " + " ".join(map(str, output_values))
     print(a + b + o)

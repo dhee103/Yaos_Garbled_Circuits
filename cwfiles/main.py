@@ -42,9 +42,8 @@ def alice(filename):
             # find wire whose source is gate output_wire
             wire = util.find_wire(gate.output,wires)
             wire.value = gate.truth_table[inputs]
-            if wire.sink in circuit.output:
-                output_values.append(wire.value) 
-
+            if wire.source in circuit.output:
+                output_values.append(wire.value)
 
         util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
 
