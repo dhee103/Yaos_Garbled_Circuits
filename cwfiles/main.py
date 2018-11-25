@@ -51,20 +51,25 @@ def alice(filename):
                 decrypt_keys.append(wire.value[0])
                 ext_values += str(wire.value[1])
 
-            double_enc_key = garbled_truth_table[gate.output][ext_values]
-            f = Fernet(decrypt_keys[1])
-            single_enc_key = f.decrypt(double_enc_key)
-            f = Fernet(decrypt_keys[0])
-            output = f.decrypt(single_enc_key)
+            output = None
+            if gate.type != 'NOT':
+                double_enc_key = garbled_truth_table[gate.output][ext_values]
+                f = Fernet(decrypt_keys[1])
+                single_enc_key = f.decrypt(double_enc_key)
+                f = Fernet(decrypt_keys[0])
+                output = f.decrypt(single_enc_key)
+            else:
+                single_enc_key = garbled_truth_table[gate.output][ext_values]
+                f = Fernet(decrypt_keys[0])
+                output = f.decrypt(single_enc_key)
 
             output_wire = util.find_wire(gate.output, wires)
-
             output_wire.value = util.partition_to_tuple(output)
 
         for output in circuit.output:
             wire = util.find_wire(output,wires)
             if wire.source in circuit.output:
-                output_values.append(wire.value)
+                output_values.append(wire.value[1] ^ wire.p_bit)
 
         util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
 

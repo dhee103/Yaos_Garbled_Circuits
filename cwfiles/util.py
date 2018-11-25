@@ -112,6 +112,7 @@ SERVER_HOST = 'localhost'		# change if server on different host
 
 class Socket:
   def send(self, msg):	self.socket.send_pyobj(msg)
+
   def receive(self): 	return self.socket.recv_pyobj()
 
   def send_wait(self, msg):
@@ -157,7 +158,7 @@ def find_wire(source, wires):
 def partition_to_tuple(output):
     output_tuple = output.decode().rsplit('=',1)
     output_tuple[0] = str.encode(output_tuple[0] + '=') # replace the equals that was removed
-    output_tuple[1] = 1 if 'x00' in output_tuple[1] else 0
+    output_tuple[1] = 1 if '\x00' in output_tuple[1] else 0
     return tuple(output_tuple)
 
 def print_output(perm, output_values, alice, bob, output):
