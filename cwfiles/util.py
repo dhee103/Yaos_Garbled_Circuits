@@ -10,6 +10,7 @@ import sys	# argv, exit
 
 import sympy	# nextprime, primefactors
 import zmq	# Context
+import copy
 
 
 # logging __________________________________________________________________
@@ -167,3 +168,24 @@ def print_output(perm, output_values, alice, bob, output):
     b = "  Bob" + str(bob) + " = " + " ".join(list(perm[n:]))
     o = "   Outputs" + str(output) + " = " + " ".join(map(str, output_values))
     print(a + b + o)
+
+def redact_gates( gates ):
+    redacted_gates = []
+    for gate in gates:
+        new_gate = copy.deepcopy(gate)
+        new_gate.type = None
+        new_gate.truth_table = None
+        redacted_gates.append(new_gate)
+    return redacted_gates
+
+def redact_wires( wires ):
+    redacted_wires = []
+    for wire in wires:
+        new_wire = copy.deepcopy(wire)
+        if wire.sinks is not None:
+            wire.p_bit = None
+        wire.key_0 = None
+        wire.key_1 = None
+        redacted_wires.append(new_wire)
+    return redacted_wires
+

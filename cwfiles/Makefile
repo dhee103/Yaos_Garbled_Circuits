@@ -18,12 +18,12 @@ yao.py: util.py crypto.py
 ot.py:	util.py
 
 alice:	main.py
-	# ${ALICE} json/f.bool.json
-	# ${ALICE} json/f.nand.json
-	# ${ALICE} json/f.add.json
-	# ${ALICE} json/f.cmp.json
-	# ${ALICE} json/f.max.json
-	# ${ALICE} json/f.min.json
+	 ${ALICE} json/f.bool.json
+	 ${ALICE} json/f.nand.json
+	 ${ALICE} json/f.add.json
+	 ${ALICE} json/f.cmp.json
+	 ${ALICE} json/f.max.json
+	 ${ALICE} json/f.min.json
 	  ${ALICE} json/f.smart.json
 
 bob:	main.py

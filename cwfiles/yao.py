@@ -108,7 +108,6 @@ class Circuit:
                     output_val = result ^ output.p_bit
 
                     encryption_key_0 = wire_0.key_1 if bool(useful_value_0) else wire_0.key_0
-
                     encryption_key_1 = wire_1.key_1 if bool(useful_value_1) else wire_1.key_0
 
                     f = Fernet(encryption_key_0)
@@ -136,17 +135,6 @@ class Circuit:
 
 
         return garbled_table
-
-
-
-
-
-
-
-
-
-
-
 
             # print(perms)
 
