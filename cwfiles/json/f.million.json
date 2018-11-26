@@ -1,0 +1,21 @@
+
+{ "+": "yao's millionaire problem",
+
+  "circuits" : [
+
+  { "name": "yao's millionaire problem",
+    "alice": [1, 2],
+    "bob":   [3, 4],
+    "out":   [11],
+    "gates": [
+      { "id":5, "type":"NOT",  "in":[3] },
+      { "id":6, "type":"NOT",  "in":[4] },
+      { "id":7, "type":"OR",  "in":[1, 5] },
+      { "id":8, "type":"OR",  "in":[2, 6] },
+      { "id":9, "type":"AND",   "in":[1, 5] },
+      { "id":10, "type":"AND",  "in":[7, 8] },
+      { "id":11, "type":"OR",  "in":[9, 10] }
+    ]
+  }
+
+] }
