@@ -7,6 +7,8 @@ import pickle
 import ot  # alice, bob
 import util  # ClientSocket, log, ServerSocket
 from yao import *  # Circuit
+from ot import *
+import copy
 
 
 # Alice is the circuit generator (client) __________________________________
@@ -27,13 +29,18 @@ def alice(filename):
 
         print()
         print("======= " + circuit.name + " =======")
+
+        socket.send((len(circuit.bob), len(circuit.alice)))
+        socket.receive()
         for perm in perms:
             circuit = Circuit(json_circuit)
             gates = circuit.gates
             wires = circuit.wires
+            saved_wires = copy.deepcopy(wires)
+
             garbled_truth_table = circuit.garbled_truth_table
             wires.sort(key=lambda x: x.source)
-            for input_wire_source, value in zip(circuit.alice + circuit.bob, perm):
+            for input_wire_source, value in zip(circuit.alice , perm):
                 # set all input wires to value
                 for wire in wires:
                     if wire.source == input_wire_source:
@@ -47,10 +54,14 @@ def alice(filename):
             del circuit.name
             socket.send(circuit)
             socket.receive()
+            for w in circuit.bob:
+                full_wire = util.find_wire(w, saved_wires)
+                ot_alice(socket, (full_wire.key_0, 0 ^ full_wire.p_bit), (full_wire.key_1, 1 ^ full_wire.p_bit))
 
             socket.send('send output')
             output_values = socket.receive()
             util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
+
 
 
 # bob's actions
@@ -64,44 +75,57 @@ def bob():
     socket = util.ServerSocket()
     util.log(f'Bob: Listening ...')
     while True:
-        circuit = socket.receive()
-        socket.send('circuit received')
+        (bob_len, alice_len) = socket.receive()
+        socket.send('thanks')
+        perms = util.generate_perms(bob_len)
 
-        gates = circuit.gates
-        wires = circuit.wires
-        garbled_truth_table = circuit.garbled_truth_table
+        for i in range(2**alice_len):
+            for perm in perms:
 
-        for gate in gates:
-            inputs = util.find_input_values(gate.inputs, wires)
-            ext_values = ''
-            decrypt_keys = []
-            for input in gate.inputs:
-                wire = util.find_wire(input, wires)
-                decrypt_keys.append(wire.value[0])
-                ext_values += str(wire.value[1])
+                circuit = socket.receive()
+                socket.send('thanks')
+                gates = circuit.gates
+                wires = circuit.wires
+                garbled_truth_table = circuit.garbled_truth_table
 
-            output = None
-            if len(gate.inputs) != 1:
-                double_enc_key = garbled_truth_table[gate.output][ext_values]
-                f = Fernet(decrypt_keys[1])
-                single_enc_key = f.decrypt(double_enc_key)
-                f = Fernet(decrypt_keys[0])
-                output = f.decrypt(single_enc_key)
-            else:
-                single_enc_key = garbled_truth_table[gate.output][ext_values]
-                f = Fernet(decrypt_keys[0])
-                output = f.decrypt(single_enc_key)
+                for input_wire_source, value in zip(circuit.bob, perm):
+                                # set all input wires to value
+                                for wire in wires:
+                                    if wire.source == input_wire_source:
+                                        wire.value = ot_bob(socket, value)
 
-            output_wire = util.find_wire(gate.output, wires)
-            output_wire.value = util.partition_to_tuple(output)
+                for gate in gates:
+                    inputs = util.find_input_values(gate.inputs, wires)
+                    ext_values = ''
+                    decrypt_keys = []
+                    for input in gate.inputs:
+                        wire = util.find_wire(input, wires)
+                        decrypt_keys.append(wire.value[0])
+                        ext_values += str(wire.value[1])
 
-        output_values = []
-        for output in circuit.output:
-            wire = util.find_wire(output, wires)
-            if wire.source in circuit.output:
-                output_values.append(wire.value[1] ^ wire.p_bit)
-        socket.receive()
-        socket.send(output_values)
+                    output = None
+                    if len(gate.inputs) != 1:
+                        double_enc_key = garbled_truth_table[gate.output][ext_values]
+                        f = Fernet(decrypt_keys[1])
+                        single_enc_key = f.decrypt(double_enc_key)
+                        f = Fernet(decrypt_keys[0])
+                        output = f.decrypt(single_enc_key)
+                    else:
+                        single_enc_key = garbled_truth_table[gate.output][ext_values]
+                        f = Fernet(decrypt_keys[0])
+                        output = f.decrypt(single_enc_key)
+
+                    output_wire = util.find_wire(gate.output, wires)
+                    output_wire.value = util.partition_to_tuple(output)
+
+                output_values = []
+                for output in circuit.output:
+                    wire = util.find_wire(output, wires)
+                    if wire.source in circuit.output:
+                        output_values.append(wire.value[1] ^ wire.p_bit)
+                socket.receive()
+                socket.send(output_values)
+
 
 
 # local test of circuit generation and evaluation, no transfers_____________
