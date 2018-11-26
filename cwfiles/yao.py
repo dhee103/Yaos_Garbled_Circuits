@@ -153,3 +153,5 @@ class Circuit:
         circuit.gates[0].inputs = ()
         for gate in circuit.gates:
             gate.output = gate.truth_table[gate.inputs]
+
+
