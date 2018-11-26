@@ -54,9 +54,6 @@ class Gate:
         return truth_table[type]
 
 
-
-
-
 # generate a circuit
 class Circuit:
     def __init__(self,json_circuit):
@@ -92,66 +89,41 @@ class Circuit:
         garbled_table = {}
         for gate in gates:
             gate_id = gate.output
+            num_inputs = len(gate.inputs)
 
-            if gate.type != 'NOT':
-                perms = util.generate_perms(2)
-                for perm in perms:
-                    wire_0 = util.find_wire(gate.inputs[0], wires)
-                    useful_value_0 = wire_0.p_bit ^ int(perm[0])
+            perms = util.generate_perms(num_inputs)
+            for perm in perms:
+                wire_0 = util.find_wire(gate.inputs[0], wires)
+                ext_value_0 = wire_0.p_bit ^ int(perm[0])
+                encryption_key_0 = wire_0.key_1 if bool(ext_value_0) else wire_0.key_0
+
+                if num_inputs == 2:
                     wire_1 = util.find_wire(gate.inputs[1], wires)
-                    useful_value_1 = wire_1.p_bit ^ int(perm[1])
-                    result = gate.truth_table[(useful_value_0, useful_value_1)]
+                    ext_value_1 = wire_1.p_bit ^ int(perm[1])
+                    encryption_key_1 = wire_1.key_1 if bool(ext_value_1) else wire_1.key_0
+                    result = gate.truth_table[(ext_value_0, ext_value_1)]
+                else:
+                    result = gate.truth_table[(ext_value_0)]
 
-                    output = util.find_wire(gate.output, wires)
-                    output_key = output.key_1 if bool(result) else output.key_0
+                output = util.find_wire(gate.output, wires)
+                output_key = output.key_1 if bool(result) else output.key_0
 
-                    output_val = result ^ output.p_bit
+                output_val = result ^ output.p_bit
 
-                    encryption_key_0 = wire_0.key_1 if bool(useful_value_0) else wire_0.key_0
-                    encryption_key_1 = wire_1.key_1 if bool(useful_value_1) else wire_1.key_0
+                f = Fernet(encryption_key_0)
+                encryption = f.encrypt(output_key + bytes(output_val))
 
-                    f = Fernet(encryption_key_0)
-                    one_pass_encryption = f.encrypt(output_key + bytes(output_val))
+                if num_inputs == 2:
                     f = Fernet(encryption_key_1)
-                    two_pass_encryption = f.encrypt(one_pass_encryption)
-                    encryptions = garbled_table.get(gate_id, {})
-                    encryptions[perm] = two_pass_encryption
-                    garbled_table[gate_id] = encryptions
-            else:
-                perms = util.generate_perms(1)
-                for perm in perms:
-                    wire_0 = util.find_wire(gate.inputs[0], wires)
-                    useful_value_0 = wire_0.p_bit ^ int(perm)
-                    result = gate.truth_table[(useful_value_0)]
-                    output = util.find_wire(gate.output, wires)
-                    output_key = output.key_1 if bool(result) else output.key_0
-                    output_val = result ^ output.p_bit
-                    encryption_key_0 = wire_0.key_1 if bool(useful_value_0) else wire_0.key_0
-                    f = Fernet(encryption_key_0)
-                    one_pass_encryption = f.encrypt(output_key + bytes(output_val))
-                    encryptions = garbled_table.get(gate_id, {})
-                    encryptions[perm] = one_pass_encryption
-                    garbled_table[gate_id] = encryptions
+                    encryption = f.encrypt(encryption)
 
+                encryptions = garbled_table.get(gate_id, {})
+                encryptions[perm] = encryption
+                garbled_table[gate_id] = encryptions
 
         return garbled_table
-
-            # print(perms)
-
-
-
-
-    # def find_sink(wire, gates):
-    #     for gate in gates:
-    #         if wire in gate.inputs:
-    #             return gate.output
-    #
-    #     return None
-
 
     def garble(circuit):
         circuit.gates[0].inputs = ()
         for gate in circuit.gates:
             gate.output = gate.truth_table[gate.inputs]
-
-

@@ -21,14 +21,9 @@ def alice(filename):
 
     for json_circuit in json_circuits['circuits']:
         circuit = Circuit(json_circuit)
-        gates = circuit.gates
-        wires = circuit.wires
-        garbled_truth_table = circuit.garbled_truth_table
         perms = util.generate_perms(circuit.inputs)
-        wires.sort(key=lambda x: x.source)
 
-        print()
-        print("======= " + circuit.name + " =======")
+        print("\n======= " + circuit.name + " =======")
 
         socket.send((len(circuit.bob), len(circuit.alice)))
         socket.receive()
@@ -44,14 +39,15 @@ def alice(filename):
                 # set all input wires to value
                 for wire in wires:
                     if wire.source == input_wire_source:
-                        key = wire.key_1 if value == '1' else wire.key_0
+                        value = int(value)
+                        key = wire.key_1 if value == 1 else wire.key_0
                         # print(value)
-                        ext_value = int(value) ^ wire.p_bit
+                        ext_value = value ^ wire.p_bit
                         wire.value = (key, ext_value)
 
             circuit.gates = util.redact_gates(circuit.gates)
             circuit.wires = util.redact_wires(circuit.wires)
-            del circuit.name
+            circuit.name = None
             socket.send(circuit)
             socket.receive()
             for w in circuit.bob:
@@ -61,12 +57,6 @@ def alice(filename):
             socket.send('send output')
             output_values = socket.receive()
             util.print_output(perm, output_values, circuit.alice, circuit.bob, circuit.output)
-
-
-
-# bob's actions
-# bob knows: his inputs,
-# decrypt
 
 
 # Bob is the circuit evaluator (server) ____________________________________
@@ -81,7 +71,6 @@ def bob():
 
         for i in range(2**alice_len):
             for perm in perms:
-
                 circuit = socket.receive()
                 socket.send('thanks')
                 gates = circuit.gates
@@ -89,10 +78,10 @@ def bob():
                 garbled_truth_table = circuit.garbled_truth_table
 
                 for input_wire_source, value in zip(circuit.bob, perm):
-                                # set all input wires to value
-                                for wire in wires:
-                                    if wire.source == input_wire_source:
-                                        wire.value = ot_bob(socket, value)
+                    # set all input wires to value
+                    for wire in wires:
+                        if wire.source == input_wire_source:
+                            wire.value = ot_bob(socket, value)
 
                 for gate in gates:
                     inputs = util.find_input_values(gate.inputs, wires)
@@ -108,12 +97,11 @@ def bob():
                         double_enc_key = garbled_truth_table[gate.output][ext_values]
                         f = Fernet(decrypt_keys[1])
                         single_enc_key = f.decrypt(double_enc_key)
-                        f = Fernet(decrypt_keys[0])
-                        output = f.decrypt(single_enc_key)
                     else:
                         single_enc_key = garbled_truth_table[gate.output][ext_values]
-                        f = Fernet(decrypt_keys[0])
-                        output = f.decrypt(single_enc_key)
+
+                    f = Fernet(decrypt_keys[0])
+                    output = f.decrypt(single_enc_key)
 
                     output_wire = util.find_wire(gate.output, wires)
                     output_wire.value = util.partition_to_tuple(output)

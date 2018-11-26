@@ -182,10 +182,10 @@ def redact_wires( wires ):
     redacted_wires = []
     for wire in wires:
         new_wire = copy.deepcopy(wire)
+        # don't wipe p-bit of output wires 
         if wire.sinks is not None:
             wire.p_bit = None
         wire.key_0 = None
         wire.key_1 = None
         redacted_wires.append(new_wire)
     return redacted_wires
-
